@@ -1,0 +1,21 @@
+.dashboard {
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+}
+
+.content-body {
+    padding: 30px;
+    flex: 1;
+    overflow-y: auto;
+}
+
+
+.main-content {
+    margin-left: 300px;
+    width: calc(100% - 300px);
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow-y: auto;
+}

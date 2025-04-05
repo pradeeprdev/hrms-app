@@ -1,0 +1,36 @@
+.topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 30px;
+    background-color: white;
+    box-shadow: 0 1px 6px rgba(0, 0, 0, 0.1);
+}
+
+.topbar h3 {
+    margin: 0;
+    color: #4D007D;
+}
+
+.topbar .top-actions {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.topbar .top-icon {
+    width: 24px;
+    height: 24px;
+    cursor: pointer;
+}
+
+.profile-container {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.profile-icon {
+    width: 40px !important;
+    height: 40px !important;
+}

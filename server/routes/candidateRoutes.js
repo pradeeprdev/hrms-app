@@ -1,29 +1,48 @@
 const express = require('express');
+const router = express.Router();
 const multer = require('multer');
 const path = require('path');
-const router = express.Router();
-const auth = require('../middlewares/authMiddleware');
 const {
   addCandidate,
-  getCandidates,
+  getAllCandidates,
+  updateStatus,
   deleteCandidate,
-  downloadResume
+  updateCandidate
 } = require('../controllers/candidateController');
 
+// Resume storage configuration
 const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
+  destination: (req, file, cb) => {
     cb(null, 'uploads/');
   },
-  filename: function (req, file, cb) {
-    cb(null, `${Date.now()}-${file.originalname}`);
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+    cb(null, uniqueSuffix + path.extname(file.originalname));
   }
 });
 
-const upload = multer({ storage });
+const fileFilter = (req, file, cb) => {
+  const allowedTypes = ['.pdf', '.doc', '.docx'];
+  const ext = path.extname(file.originalname).toLowerCase();
+  if (allowedTypes.includes(ext)) {
+    cb(null, true);
+  } else {
+    cb(new Error('Only .pdf, .doc, .docx files are allowed'), false);
+  }
+};
 
-router.get('/', auth, getCandidates);
-router.post('/', auth, upload.single('resume'), addCandidate);
-router.delete('/:id', auth, deleteCandidate);
-router.get('/download/:id', auth, downloadResume);
+const upload = multer({ storage, fileFilter });
+
+// Routes
+router.post('/', upload.single('resume'), addCandidate);
+router.get('/', getAllCandidates);
+router.patch('/:id/status', updateStatus);
+router.put('/:id', updateCandidate);
+router.delete('/:id', deleteCandidate);
+
+router.get('/download/:filename', (req, res) => {
+  const filePath = path.join(__dirname, '../uploads/', req.params.filename);
+  res.download(filePath);
+});
 
 module.exports = router;
