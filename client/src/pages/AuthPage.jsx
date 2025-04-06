@@ -18,7 +18,7 @@ export default function AuthPage() {
   const [loading, setLoading] = useState(false);
 
   const [formData, setFormData] = useState({
-    fullName: "",
+    name: "",
     email: "",
     password: "",
     confirmPassword: ""
@@ -34,7 +34,7 @@ export default function AuthPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const { fullName, email, password, confirmPassword } = formData;
+    const { name, email, password, confirmPassword } = formData;
 
     // Basic validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -55,7 +55,7 @@ export default function AuthPage() {
     }
 
     if (!isLogin) {
-      if (!fullName) {
+      if (!name) {
         toast.error("Full name is required.");
         return;
       }
@@ -91,7 +91,7 @@ export default function AuthPage() {
       } else {
         toast.success("Registration successful. Please login.");
         setIsLogin(true);
-        setFormData({ fullName: "", email: "", password: "", confirmPassword: "" });
+        setFormData({ name: "", email: "", password: "", confirmPassword: "" });
       }
     } catch (err) {
       if (err.name === "TypeError") {
@@ -120,14 +120,14 @@ export default function AuthPage() {
           <form onSubmit={handleSubmit} className="auth-form">
             {!isLogin && (
               <>
-                <label htmlFor="fullName">Full Name<span className="required-asterisk">*</span></label>
+                <label htmlFor="name">Full Name<span className="required-asterisk">*</span></label>
                 <input
                   type="text"
-                  name="fullName"
-                  id="fullName"
+                  name="name"
+                  id="name"
                   placeholder="Full Name"
                   onChange={handleChange}
-                  value={formData.fullName}
+                  value={formData.name}
                   className="auth-input"
                 />
               </>
