@@ -6,4 +6,5 @@ export const API_ENDPOINTS = {
   EMPLOYEES: `${BASE_URL}/employees`,
   CANDIDATES: `${BASE_URL}/candidates`,
   AUTH: `${BASE_URL}/auth`,
+  UPLOADS: `${BASE_URL}/uploads`,
 };

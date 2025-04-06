@@ -11,6 +11,7 @@ import "react-toastify/dist/ReactToastify.css";
 import { API_ENDPOINTS } from "../config";
 
 const API_URL = API_ENDPOINTS.LEAVES;
+const API_URL_UPLOAD = API_ENDPOINTS.UPLOADS;
 const statusOptions = ["Pending", "Approved", "Rejected"];
 
 const employeeNames = [
@@ -228,7 +229,7 @@ const Leaves = () => {
                 </td>
                 <td>
                   {leave.docs && (
-                    <a href={`http://localhost:5000/uploads/${leave.docs}`} download>
+                    <a href={`${API_URL_UPLOAD}/${leave.docs}`} download>
                       Download
                     </a>
                   )}
