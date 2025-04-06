@@ -19,8 +19,8 @@ export default function AuthPage() {
 
   const [formData, setFormData] = useState({
     fullName: "",
-    email: "pradeep@example.com",
-    password: "password123",
+    email: "",
+    password: "",
     confirmPassword: ""
   });
 
