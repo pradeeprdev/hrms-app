@@ -1,6 +1,8 @@
 import React, { useEffect, useState, useRef } from "react";
 import axios from "axios";
 import { FiMoreVertical } from "react-icons/fi";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import "../styles/Candidates.css";
 
 const API_URL = "http://localhost:5000/api/candidates";
@@ -47,6 +49,7 @@ const Candidates = () => {
       const res = await axios.get(API_URL);
       setCandidates(res.data);
     } catch (err) {
+      toast.error("Error fetching candidates.");
       console.error("Error fetching candidates:", err);
     }
   };
@@ -64,18 +67,47 @@ const Candidates = () => {
     }
   };
 
+  const validateForm = () => {
+    const { fullName, email, phone, position, experience, appliedDate } = formData;
+
+    if (!fullName || !email || !phone || !position || !experience || !appliedDate) {
+      toast.warning("Please fill all required fields.");
+      return false;
+    }
+
+    const emailRegex = /^\S+@\S+\.\S+$/;
+    const phoneRegex = /^[0-9]{10}$/;
+
+    if (!emailRegex.test(email)) {
+      toast.warning("Invalid email format.");
+      return false;
+    }
+
+    if (!phoneRegex.test(phone)) {
+      toast.warning("Phone number must be 10 digits.");
+      return false;
+    }
+
+    return true;
+  };
+
   const handleSubmit = async () => {
+    if (!validateForm()) return;
+
     try {
       if (editId) {
         await axios.put(`${API_URL}/${editId}`, formData);
+        toast.success("Candidate updated successfully!");
       } else {
         await axios.post(API_URL, formData);
+        toast.success("Candidate added successfully!");
       }
       fetchCandidates();
       setFormData(initialForm);
       setShowForm(false);
       setEditId(null);
     } catch (err) {
+      toast.error("Error submitting candidate.");
       console.error("Error submitting form:", err);
     }
   };
@@ -89,9 +121,11 @@ const Candidates = () => {
   const confirmDelete = async () => {
     try {
       await axios.delete(`${API_URL}/${confirmDeleteId}`);
+      toast.success("Candidate deleted successfully!");
       fetchCandidates();
       setConfirmDeleteId(null);
     } catch (err) {
+      toast.error("Error deleting candidate.");
       console.error("Error deleting candidate:", err);
     }
   };
@@ -99,8 +133,10 @@ const Candidates = () => {
   const handleStatusChange = async (id, newStatus) => {
     try {
       await axios.put(`${API_URL}/${id}`, { status: newStatus });
+      toast.success("Status updated!");
       fetchCandidates();
     } catch (err) {
+      toast.error("Error updating status.");
       console.error("Error updating status:", err);
     }
   };
@@ -113,6 +149,7 @@ const Candidates = () => {
 
   return (
     <div className="candidates-container">
+      <ToastContainer />
       <div className="candidates-header">
         <select value={filterLevel} onChange={(e) => setFilterLevel(e.target.value)} className="filter-dropdown">
           {levels.map((lvl) => (
@@ -157,7 +194,7 @@ const Candidates = () => {
         </thead>
         <tbody>
           {filteredCandidates.map((cand, idx) => (
-            <tr key={idx}>
+            <tr key={cand._id}>
               <td>{cand.fullName}</td>
               <td>{cand.email}</td>
               <td>{cand.phone}</td>

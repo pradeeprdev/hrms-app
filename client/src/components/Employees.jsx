@@ -30,30 +30,26 @@ const Employees = () => {
 
   const dropdownRefs = useRef([]);
 
+  // Fetch employees on mount
   useEffect(() => {
     fetchEmployees();
     document.addEventListener('click', handleClickOutsideDropdown);
     return () => document.removeEventListener('click', handleClickOutsideDropdown);
   }, []);
 
-  const handleClickOutsideDropdown = (e) => {
-    if (dropdownRefs.current.some(ref => ref && ref.contains(e.target))) return;
-    setDropdownOpenIndex(null);
-  };
-
   const fetchEmployees = async () => {
     try {
-      const res = await axios.get(API_URL);
-      setEmployees(res.data);
-    } catch (err) {
-      console.error("Error fetching employees:", err);
+      const response = await axios.get(API_URL);
+      setEmployees(response.data);
+    } catch (error) {
+      console.error("Failed to fetch employees:", error);
     }
   };
 
-  const filteredEmployees = employees.filter((emp) =>
-    (selectedPosition === 'All' || emp.position === selectedPosition) &&
-    emp.fullName.toLowerCase().includes(search.toLowerCase())
-  );
+  const handleClickOutsideDropdown = (event) => {
+    if (dropdownRefs.current.some(ref => ref && ref.contains(event.target))) return;
+    setDropdownOpenIndex(null);
+  };
 
   const handleInputChange = (e) => {
     const { name, value, files } = e.target;
@@ -75,20 +71,25 @@ const Employees = () => {
       } else {
         await axios.post(API_URL, formData);
       }
+
       fetchEmployees();
-      setShowForm(false);
-      setFormData(initialFormData);
-      setEditMode(false);
-      setEditingId(null);
-    } catch (err) {
-      console.error("Error submitting form:", err);
+      resetForm();
+    } catch (error) {
+      console.error("Failed to submit form:", error);
     }
+  };
+
+  const resetForm = () => {
+    setFormData(initialFormData);
+    setEditMode(false);
+    setEditingId(null);
+    setShowForm(false);
   };
 
   const openEditForm = (employee) => {
     setFormData(employee);
-    setEditingId(employee._id);
     setEditMode(true);
+    setEditingId(employee._id);
     setShowForm(true);
   };
 
@@ -97,32 +98,42 @@ const Employees = () => {
       await axios.delete(`${API_URL}/${confirmDeleteId}`);
       fetchEmployees();
       setConfirmDeleteId(null);
-    } catch (err) {
-      console.error("Error deleting employee:", err);
+    } catch (error) {
+      console.error("Failed to delete employee:", error);
     }
   };
 
+  const filteredEmployees = employees.filter(emp =>
+    (selectedPosition === 'All' || emp.position === selectedPosition) &&
+    emp.fullName.toLowerCase().includes(search.toLowerCase())
+  );
+
   return (
     <div className="employees-container">
+      {/* Header */}
       <div className="employees-header">
         <select
           className="filter-dropdown"
           value={selectedPosition}
           onChange={(e) => setSelectedPosition(e.target.value)}
         >
-          {positions.map((pos) => (
+          {positions.map(pos => (
             <option key={pos} value={pos}>{pos}</option>
           ))}
         </select>
 
         <div className="right-controls">
-          <button className="violet-button" onClick={() => {
-            setShowForm(true);
-            setEditMode(false);
-            setFormData(initialFormData);
-          }}>
+          <button
+            className="violet-button"
+            onClick={() => {
+              setShowForm(true);
+              setEditMode(false);
+              setFormData(initialFormData);
+            }}
+          >
             Add Employee
           </button>
+
           <input
             type="text"
             className="search-input"
@@ -133,6 +144,7 @@ const Employees = () => {
         </div>
       </div>
 
+      {/* Employee Table */}
       <table className="employee-table">
         <thead>
           <tr>
@@ -148,8 +160,10 @@ const Employees = () => {
         </thead>
         <tbody>
           {filteredEmployees.map((emp, idx) => (
-            <tr key={idx}>
-              <td><img src={emp.profile} alt="profile" className="profile-pic" /></td>
+            <tr key={emp._id || idx}>
+              <td>
+                <img src={emp.profile || ""} alt="profile" className="profile-pic" />
+              </td>
               <td>{emp.fullName}</td>
               <td>{emp.email}</td>
               <td>{emp.phone}</td>
@@ -159,9 +173,13 @@ const Employees = () => {
               <td>
                 <div
                   className="action-dropdown"
-                  ref={(el) => dropdownRefs.current[idx] = el}
+                  ref={el => dropdownRefs.current[idx] = el}
                 >
-                  <FiMoreVertical onClick={() => setDropdownOpenIndex(dropdownOpenIndex === idx ? null : idx)} />
+                  <FiMoreVertical
+                    onClick={() =>
+                      setDropdownOpenIndex(dropdownOpenIndex === idx ? null : idx)
+                    }
+                  />
                   {dropdownOpenIndex === idx && (
                     <div className="dropdown-menu active">
                       <div onClick={() => openEditForm(emp)}>Edit</div>
@@ -180,29 +198,30 @@ const Employees = () => {
         <div className="popup-overlay">
           <div className="popup-form">
             <div className="popup-header">
-              <h3>{editMode ? 'Edit Employee Details' : 'Enter Employee Details'}</h3>
+              <h3>{editMode ? "Edit Employee Details" : "Enter Employee Details"}</h3>
               <span onClick={() => setShowForm(false)}>&times;</span>
             </div>
 
             <div className="popup-body grid-form">
-              {['fullName', 'email', 'phone', 'department', 'position', 'profile', 'dateOfJoining'].map((field) => (
+              {Object.keys(initialFormData).map(field => (
                 <div className="form-group" key={field}>
                   <label htmlFor={field}>
-                    {field.replace(/([A-Z])/g, ' $1')}
-                    <span style={{ color: 'red' }}> *</span>
+                    {field.replace(/([A-Z])/g, " $1")}
+                    <span style={{ color: "red" }}> *</span>
                   </label>
-                  {field === 'position' ? (
+
+                  {field === "position" ? (
                     <select
                       name="position"
                       value={formData.position}
                       onChange={handleInputChange}
                     >
                       <option value="">Select Position</option>
-                      {positions.slice(1).map((pos) => (
+                      {positions.slice(1).map(pos => (
                         <option key={pos} value={pos}>{pos}</option>
                       ))}
                     </select>
-                  ) : field === 'profile' ? (
+                  ) : field === "profile" ? (
                     <input
                       type="file"
                       name="profile"
@@ -211,7 +230,7 @@ const Employees = () => {
                     />
                   ) : (
                     <input
-                      type={field === 'dateOfJoining' ? 'date' : 'text'}
+                      type={field === "dateOfJoining" ? "date" : "text"}
                       name={field}
                       value={formData[field]}
                       onChange={handleInputChange}
@@ -220,9 +239,10 @@ const Employees = () => {
                 </div>
               ))}
             </div>
-            <div className='action-button-container'>
+
+            <div className="action-button-container">
               <button className="violet-button" onClick={handleAddEditSubmit}>
-                {editMode ? 'Update' : 'Submit'}
+                {editMode ? "Update" : "Submit"}
               </button>
             </div>
           </div>
@@ -235,8 +255,12 @@ const Employees = () => {
           <div className="confirm-popup">
             <h3>Are you sure you want to delete this employee?</h3>
             <div className="confirm-buttons">
-              <button className="cancel-btn" onClick={() => setConfirmDeleteId(null)}>Cancel</button>
-              <button className="delete-btn" onClick={confirmDelete}>Delete</button>
+              <button className="cancel-btn" onClick={() => setConfirmDeleteId(null)}>
+                Cancel
+              </button>
+              <button className="delete-btn" onClick={confirmDelete}>
+                Delete
+              </button>
             </div>
           </div>
         </div>

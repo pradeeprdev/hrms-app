@@ -1,6 +1,6 @@
 const Attendance = require("../models/Attendance");
 
-// Get all attendance (with employee populated)
+// Get all attendance
 exports.getAllAttendance = async (req, res) => {
   try {
     const records = await Attendance.find().populate("employee");

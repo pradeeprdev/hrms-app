@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+
 const employeeSchema = new mongoose.Schema({
   fullName: String,
   email: String,
@@ -8,4 +9,5 @@ const employeeSchema = new mongoose.Schema({
   profile: String,
   dateOfJoining: Date,
 });
+
 module.exports = mongoose.model('Employee', employeeSchema);

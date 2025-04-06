@@ -33,7 +33,6 @@ const fileFilter = (req, file, cb) => {
 
 const upload = multer({ storage, fileFilter });
 
-// Routes
 router.post('/', upload.single('resume'), addCandidate);
 router.get('/', getAllCandidates);
 router.patch('/:id/status', updateStatus);

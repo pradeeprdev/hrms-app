@@ -8,6 +8,7 @@ const authRoutes = require('./routes/authRoutes');
 const employeeRoutes = require('./routes/employeeRoutes');
 const candidateRoutes = require('./routes/candidateRoutes');
 const attendanceRoutes = require('./routes/attendanceRoutes');
+const leaveRoutes = require('./routes/leaveRoutes');
 
 const Attendance = require('./models/Attendance');
 const Employee = require('./models/Employee');
@@ -29,6 +30,7 @@ app.use('/api/employees', employeeRoutes);
 app.use('/api/candidates', candidateRoutes);
 app.use('/api/attendance', attendanceRoutes);
 app.use('/uploads', express.static('uploads'));
+app.use('/api/leaves', leaveRoutes);
 
 const initializeTodayAttendance = async () => {
     const today = new Date();

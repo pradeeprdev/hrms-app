@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import axios from "axios";
-import { FiMoreVertical } from "react-icons/fi";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import "../styles/Attendance.css";
 
 const API_URL = "http://localhost:5000/api/attendance";
@@ -35,7 +36,7 @@ const Attendance = () => {
       const res = await axios.get(API_URL);
       setRecords(res.data);
     } catch (err) {
-      console.error("Error fetching attendance:", err);
+      toast.error("Error fetching attendance records.");
     }
   };
 
@@ -44,7 +45,7 @@ const Attendance = () => {
       const res = await axios.get("http://localhost:5000/api/employees");
       setEmployees(res.data);
     } catch (err) {
-      console.error("Error fetching employees:", err);
+      toast.error("Error fetching employees.");
     }
   };
 
@@ -59,19 +60,32 @@ const Attendance = () => {
     setFormData({ ...formData, [name]: value });
   };
 
+  const validateForm = () => {
+    const { employee, date, task } = formData;
+    if (!employee || !date || !task.trim()) {
+      toast.error("Please fill all required fields.");
+      return false;
+    }
+    return true;
+  };
+
   const handleSubmit = async () => {
+    if (!validateForm()) return;
+
     try {
       if (editId) {
         await axios.put(`${API_URL}/${editId}`, formData);
+        toast.success("Attendance updated successfully.");
       } else {
         await axios.post(API_URL, formData);
+        toast.success("Attendance added successfully.");
       }
       fetchAttendance();
       setFormData(initialForm);
       setShowForm(false);
       setEditId(null);
     } catch (err) {
-      console.error("Error submitting attendance:", err);
+      toast.error("Error submitting attendance.");
     }
   };
 
@@ -91,8 +105,9 @@ const Attendance = () => {
     try {
       await axios.delete(`${API_URL}/${id}`);
       fetchAttendance();
+      toast.success("Attendance deleted successfully.");
     } catch (err) {
-      console.error("Error deleting attendance:", err);
+      toast.error("Error deleting attendance.");
     }
     setDropdownOpen(null);
   };
@@ -101,8 +116,9 @@ const Attendance = () => {
     try {
       await axios.put(`${API_URL}/${id}`, { status: newStatus });
       fetchAttendance();
+      toast.success("Status updated.");
     } catch (err) {
-      console.error("Error updating status:", err);
+      toast.error("Error updating status.");
     }
   };
 
@@ -116,6 +132,7 @@ const Attendance = () => {
 
   return (
     <div className="attendance-container">
+      <ToastContainer />
       <div className="attendance-header">
         <select
           className="search-input"
@@ -180,12 +197,9 @@ const Attendance = () => {
                 </select>
               </td>
               <td className="action-cell" ref={dropdownRef}>
-                <FiMoreVertical
-                  className="dots-icon"
-                  onClick={() =>
-                    setDropdownOpen(dropdownOpen === rec._id ? null : rec._id)
-                  }
-                />
+                <button onClick={() => setDropdownOpen(dropdownOpen === rec._id ? null : rec._id)}>
+                  More
+                </button>
                 {dropdownOpen === rec._id && (
                   <div className="dropdown-menu">
                     <div onClick={() => handleEdit(rec)}>Edit</div>
@@ -239,6 +253,7 @@ const Attendance = () => {
                   name="task"
                   value={formData.task}
                   onChange={handleInputChange}
+                  required
                 />
               </div>
               <div className="form-group">

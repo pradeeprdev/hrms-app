@@ -13,6 +13,7 @@ export default function AuthPage() {
   const [isLogin, setIsLogin] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const [formData, setFormData] = useState({
     fullName: "",
@@ -31,12 +32,46 @@ export default function AuthPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!formData.email || !formData.password || (!isLogin && (!formData.fullName || formData.password !== formData.confirmPassword))) {
-      toast.error("Please fill in all fields correctly.");
+    const { fullName, email, password, confirmPassword } = formData;
+
+    // Basic validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    if (!email || !password) {
+      toast.error("Email and Password are required.");
       return;
     }
 
+    if (!emailRegex.test(email)) {
+      toast.error("Please enter a valid email address.");
+      return;
+    }
+
+    if (password.length < 6) {
+      toast.error("Password must be at least 6 characters.");
+      return;
+    }
+
+    if (!isLogin) {
+      if (!fullName) {
+        toast.error("Full name is required.");
+        return;
+      }
+
+      if (!confirmPassword) {
+        toast.error("Please confirm your password.");
+        return;
+      }
+
+      if (password !== confirmPassword) {
+        toast.error("Passwords do not match.");
+        return;
+      }
+    }
+
     try {
+      setLoading(true);
+
       const res = await fetch(`http://localhost:5000/api/auth/${isLogin ? "login" : "register"}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -45,7 +80,7 @@ export default function AuthPage() {
 
       const data = await res.json();
 
-      if (!res.ok) throw new Error(data.message);
+      if (!res.ok) throw new Error(data.message || "Something went wrong.");
 
       if (isLogin) {
         login(data.token);
@@ -57,7 +92,13 @@ export default function AuthPage() {
         setFormData({ fullName: "", email: "", password: "", confirmPassword: "" });
       }
     } catch (err) {
-      toast.error(err.message);
+      if (err.name === "TypeError") {
+        toast.error("Failed to connect to server. Please try again.");
+      } else {
+        toast.error(err.message);
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -143,8 +184,8 @@ export default function AuthPage() {
               </>
             )}
 
-            <button type="submit" className="auth-button">
-              {isLogin ? "Login" : "Register"}
+            <button type="submit" className="auth-button" disabled={loading}>
+              {loading ? (isLogin ? "Logging in..." : "Registering...") : (isLogin ? "Login" : "Register")}
             </button>
           </form>
 
