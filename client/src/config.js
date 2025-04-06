@@ -5,4 +5,5 @@ export const API_ENDPOINTS = {
   LEAVES: `${BASE_URL}/leaves`,
   EMPLOYEES: `${BASE_URL}/employees`,
   CANDIDATES: `${BASE_URL}/candidates`,
+  AUTH: `${BASE_URL}/auth`,
 };

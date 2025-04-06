@@ -8,8 +8,10 @@ import Logo from '../assets/Logo.png';
 import OnboardImg from '../assets/Onboarding.png';
 import EyeClosed from '../assets/eye-closed.png';
 import EyeOpened from '../assets/eye-opened.png';
+import { API_ENDPOINTS } from "../config";
 
 export default function AuthPage() {
+  const API_URL = API_ENDPOINTS.AUTH;
   const [isLogin, setIsLogin] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -72,7 +74,7 @@ export default function AuthPage() {
     try {
       setLoading(true);
 
-      const res = await fetch(`${API_URL}/auth/${isLogin ? "login" : "register"}`, {
+      const res = await fetch(`${API_URL}/${isLogin ? "login" : "register"}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData)
