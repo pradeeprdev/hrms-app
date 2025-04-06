@@ -1,6 +1,4 @@
 const Candidate = require('../models/Candidate');
-const fs = require('fs');
-const path = require('path');
 
 // Add candidate
 exports.addCandidate = async (req, res) => {
@@ -50,10 +48,6 @@ exports.deleteCandidate = async (req, res) => {
   try {
     const candidate = await Candidate.findById(req.params.id);
     if (!candidate) return res.status(404).json({ error: 'Candidate not found' });
-
-    // Delete the resume file
-    const filePath = path.join(__dirname, '../uploads/', candidate.resume);
-    if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
 
     await Candidate.findByIdAndDelete(req.params.id);
     res.json({ message: 'Candidate deleted' });

@@ -1,5 +1,4 @@
 // Leaves.jsx
-
 import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import Calendar from "react-calendar";
@@ -12,19 +11,11 @@ import { API_ENDPOINTS } from "../config";
 
 const API_URL = API_ENDPOINTS.LEAVES;
 const API_URL_UPLOAD = API_ENDPOINTS.UPLOADS;
+const EMPLOYEES_API = API_ENDPOINTS.EMPLOYEES;
 const statusOptions = ["Pending", "Approved", "Rejected"];
-
-const employeeNames = [
-  { name: "Alice", designation: "Developer" },
-  { name: "Bob", designation: "Designer" },
-  { name: "Charlie", designation: "Manager" },
-  { name: "David", designation: "QA Engineer" },
-  { name: "Evelyn", designation: "HR" },
-];
 
 const initialForm = {
   name: "",
-  designation: "",
   date: "",
   reason: "",
   status: "Pending",
@@ -33,16 +24,19 @@ const initialForm = {
 
 const Leaves = () => {
   const [leaves, setLeaves] = useState([]);
+  const [employees, setEmployees] = useState([]);
   const [formData, setFormData] = useState(initialForm);
   const [filterStatus, setFilterStatus] = useState("All");
   const [search, setSearch] = useState("");
   const [showForm, setShowForm] = useState(false);
   const [editId, setEditId] = useState(null);
   const [dropdownIndex, setDropdownIndex] = useState(null);
+  const [empLoading, setEmpLoading] = useState(true);
   const dropdownRefs = useRef([]);
 
   useEffect(() => {
     fetchLeaves();
+    fetchEmployees();
     document.addEventListener("click", handleClickOutside);
     return () => document.removeEventListener("click", handleClickOutside);
   }, []);
@@ -58,7 +52,18 @@ const Leaves = () => {
       setLeaves(res.data);
     } catch (err) {
       toast.error("Failed to fetch leave records!");
-      console.error("Error fetching leaves:", err);
+    }
+  };
+
+  const fetchEmployees = async () => {
+    try {
+      setEmpLoading(true);
+      const res = await axios.get(EMPLOYEES_API);
+      setEmployees(res.data || []);
+    } catch (err) {
+      toast.error("Failed to fetch employee list!");
+    } finally {
+      setEmpLoading(false);
     }
   };
 
@@ -68,18 +73,11 @@ const Leaves = () => {
       setFormData({ ...formData, docs: files[0] });
     } else {
       setFormData({ ...formData, [name]: value });
-
-      if (name === "name") {
-        const selectedEmp = employeeNames.find((emp) => emp.name === value);
-        if (selectedEmp) {
-          setFormData((prev) => ({ ...prev, designation: selectedEmp.designation }));
-        }
-      }
     }
   };
 
   const validateForm = () => {
-    if (!formData.name || !formData.designation || !formData.date || !formData.reason) {
+    if (!formData.name || !formData.date || !formData.reason) {
       toast.warn("Please fill out all required fields.");
       return false;
     }
@@ -107,12 +105,17 @@ const Leaves = () => {
       setEditId(null);
     } catch (err) {
       toast.error("Error submitting leave.");
-      console.error("Error submitting leave:", err);
     }
   };
 
   const handleEdit = (leave) => {
-    setFormData(leave);
+    setFormData({
+      name: leave.name,
+      date: leave.date,
+      reason: leave.reason,
+      status: leave.status,
+      docs: leave.docs,
+    });
     setEditId(leave._id);
     setShowForm(true);
   };
@@ -127,7 +130,6 @@ const Leaves = () => {
       fetchLeaves();
     } catch (err) {
       toast.error("Error deleting leave.");
-      console.error("Error deleting leave:", err);
     }
   };
 
@@ -138,7 +140,6 @@ const Leaves = () => {
       fetchLeaves();
     } catch (err) {
       toast.error("Failed to update status.");
-      console.error("Error updating status:", err);
     }
   };
 
@@ -158,15 +159,21 @@ const Leaves = () => {
     return acc;
   }, {});
 
+  const getEmpDesignation = (name) => {
+    const emp = employees.find((e) => e.fullName === name);
+    return emp ? emp.designation : "";
+  };
+
   return (
     <div className="leave-container">
       <ToastContainer position="top-right" autoClose={3000} />
-      
       <div className="leave-left">
         <div className="leave-header">
           <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}>
             {["All", ...statusOptions].map((status) => (
-              <option key={status} value={status}>{status}</option>
+              <option key={status} value={status}>
+                {status}
+              </option>
             ))}
           </select>
           <div className="right-controls">
@@ -193,8 +200,8 @@ const Leaves = () => {
         <table className="leave-table">
           <thead>
             <tr>
-              <th>Profile</th>
               <th>Name</th>
+              <th>Designation</th>
               <th>Date</th>
               <th>Reason</th>
               <th>Status</th>
@@ -205,14 +212,8 @@ const Leaves = () => {
           <tbody>
             {filteredLeaves.map((leave, idx) => (
               <tr key={leave._id}>
-                <td>
-                  <img
-                    src={leave.profile || "/default-profile.png"}
-                    alt="profile"
-                    className="profile-img"
-                  />
-                </td>
                 <td>{leave.name}</td>
+                <td>{getEmpDesignation(leave.name)}</td>
                 <td>{new Date(leave.date).toLocaleDateString()}</td>
                 <td>{leave.reason}</td>
                 <td>
@@ -237,9 +238,7 @@ const Leaves = () => {
                 <td>
                   <div className="action-col" ref={(el) => (dropdownRefs.current[idx] = el)}>
                     <FiMoreVertical
-                      onClick={() =>
-                        setDropdownIndex(dropdownIndex === idx ? null : idx)
-                      }
+                      onClick={() => setDropdownIndex(dropdownIndex === idx ? null : idx)}
                     />
                     {dropdownIndex === idx && (
                       <div className="dropdown-menu active">
@@ -269,14 +268,9 @@ const Leaves = () => {
           <h4>Approved Leaves</h4>
           {approvedLeaves.map((leave) => (
             <div key={leave._id} className="approved-card">
-              <img
-                src={leave.profile || "/default-profile.png"}
-                alt="profile"
-                className="profile-img"
-              />
               <div>
                 <strong>{leave.name}</strong>
-                <div className="designation">{leave.designation}</div>
+                <div className="designation">{getEmpDesignation(leave.name)}</div>
                 <div>{new Date(leave.date).toLocaleDateString()}</div>
               </div>
             </div>
@@ -294,23 +288,27 @@ const Leaves = () => {
             <div className="popup-body grid-form">
               <div className="form-group">
                 <label>Name</label>
-                <select name="name" value={formData.name} onChange={handleInputChange}>
-                  <option value="">Select</option>
-                  {employeeNames.map((emp) => (
-                    <option key={emp.name} value={emp.name}>
-                      {emp.name}
-                    </option>
-                  ))}
-                </select>
+                {empLoading ? (
+                  <p>Loading employees...</p>
+                ) : employees.length > 0 ? (
+                  <select name="name" value={formData.name} onChange={handleInputChange}>
+                    <option value="">Select</option>
+                    {employees.map((emp) => (
+                      <option key={emp._id} value={emp.fullName}>
+                        {emp.fullName}
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <p>No employees found</p>
+                )}
               </div>
 
               <div className="form-group">
                 <label>Designation</label>
                 <input
                   type="text"
-                  name="designation"
-                  value={formData.designation}
-                  onChange={handleInputChange}
+                  value={getEmpDesignation(formData.name)}
                   readOnly
                 />
               </div>
@@ -339,11 +337,12 @@ const Leaves = () => {
                 <label>Docs</label>
                 <input type="file" name="docs" onChange={handleInputChange} />
               </div>
-            </div>
-            <div className="action-button-container">
-              <button className="violet-button" onClick={handleSubmit}>
-                {editId ? "Update" : "Submit"}
-              </button>
+
+              <div className="form-group full-width">
+                <button className="violet-button" onClick={handleSubmit}>
+                  {editId ? "Update" : "Submit"}
+                </button>
+              </div>
             </div>
           </div>
         </div>
