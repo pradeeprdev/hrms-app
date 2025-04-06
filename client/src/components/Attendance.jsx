@@ -47,7 +47,7 @@ const Attendance = () => {
 
   const fetchEmployees = async () => {
     try {
-      const res = await axios.get("http://localhost:5000/api/employees");
+      const res = await axios.get(API_URL);
       setEmployees(res.data);
     } catch {
       toast.error("Error fetching employees.");

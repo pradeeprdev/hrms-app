@@ -225,7 +225,7 @@ const Candidates = () => {
                       {cand.resume && (
                         <div>
                           <a
-                            href={`http://localhost:5000/api/candidates/download/${cand.resume}`}
+                            href={`${API_URL}/candidates/download/${cand.resume}`}
                             target="_blank"
                             rel="noopener noreferrer"
                             download
