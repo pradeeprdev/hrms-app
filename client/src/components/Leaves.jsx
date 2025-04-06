@@ -1,3 +1,5 @@
+// Leaves.jsx
+
 import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import Calendar from "react-calendar";
@@ -6,8 +8,9 @@ import "../styles/Leaves.css";
 import { FiMoreVertical } from "react-icons/fi";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { API_ENDPOINTS } from "../config";
 
-const API_URL = "http://localhost:5000/api/leaves";
+const API_URL = API_ENDPOINTS.LEAVES;
 const statusOptions = ["Pending", "Approved", "Rejected"];
 
 const employeeNames = [
@@ -113,6 +116,20 @@ const Leaves = () => {
     setShowForm(true);
   };
 
+  const handleDelete = async (id) => {
+    const confirmDelete = window.confirm("Are you sure you want to delete this leave?");
+    if (!confirmDelete) return;
+
+    try {
+      await axios.delete(`${API_URL}/${id}`);
+      toast.success("Leave deleted successfully.");
+      fetchLeaves();
+    } catch (err) {
+      toast.error("Error deleting leave.");
+      console.error("Error deleting leave:", err);
+    }
+  };
+
   const handleStatusChange = async (id, status) => {
     try {
       await axios.put(`${API_URL}/${id}`, { status });
@@ -211,16 +228,13 @@ const Leaves = () => {
                 </td>
                 <td>
                   {leave.docs && (
-                    <a
-                      href={`http://localhost:5000/uploads/${leave.docs}`}
-                      download
-                    >
+                    <a href={`http://localhost:5000/uploads/${leave.docs}`} download>
                       Download
                     </a>
                   )}
                 </td>
                 <td>
-                  <div ref={(el) => (dropdownRefs.current[idx] = el)}>
+                  <div className="action-col" ref={(el) => (dropdownRefs.current[idx] = el)}>
                     <FiMoreVertical
                       onClick={() =>
                         setDropdownIndex(dropdownIndex === idx ? null : idx)
@@ -229,6 +243,7 @@ const Leaves = () => {
                     {dropdownIndex === idx && (
                       <div className="dropdown-menu active">
                         <div onClick={() => handleEdit(leave)}>Edit</div>
+                        <div onClick={() => handleDelete(leave._id)}>Delete</div>
                       </div>
                     )}
                   </div>

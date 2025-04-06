@@ -4,8 +4,9 @@ import { FiMoreVertical } from "react-icons/fi";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import "../styles/Candidates.css";
+import { API_ENDPOINTS } from "../config";
 
-const API_URL = "http://localhost:5000/api/candidates";
+const API_URL = API_ENDPOINTS.CANDIDATES;
 
 const levels = ["All", "Fresher", "Mid", "Senior"];
 const statusOptions = ["New", "Shortlisted", "Interviewed", "Selected"];

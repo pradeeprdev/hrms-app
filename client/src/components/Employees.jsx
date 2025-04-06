@@ -2,8 +2,9 @@ import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { FiMoreVertical } from 'react-icons/fi';
 import "../styles/Employees.css";
+import { API_ENDPOINTS } from "../config";
 
-const API_URL = "http://localhost:5000/api/employees";
+const API_URL = API_ENDPOINTS.EMPLOYEES;
 
 const positions = ['All', 'Intern', 'Full time', 'Junior', 'Senior', 'Team Lead'];
 

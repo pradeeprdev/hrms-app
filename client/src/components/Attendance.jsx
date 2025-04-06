@@ -1,10 +1,13 @@
+// Attendance.js
 import React, { useEffect, useState, useRef } from "react";
 import axios from "axios";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { FiMoreVertical } from "react-icons/fi";
 import "../styles/Attendance.css";
+import { API_ENDPOINTS } from "../config";
 
-const API_URL = "http://localhost:5000/api/attendance";
+const API_URL = API_ENDPOINTS.ATTENDANCE;
 const statusOptions = ["Present", "Absent", "Work From Home", "Medical Leave"];
 const initialForm = {
   employee: "",
@@ -22,20 +25,22 @@ const Attendance = () => {
   const [statusFilter, setStatusFilter] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [dropdownOpen, setDropdownOpen] = useState(null);
-  const dropdownRef = useRef(null);
+  const dropdownRefs = useRef({});
+
+  console.log('dropdownOpen', dropdownOpen)
 
   useEffect(() => {
     fetchAttendance();
     fetchEmployees();
-    document.addEventListener("click", handleClickOutside);
-    return () => document.removeEventListener("click", handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   const fetchAttendance = async () => {
     try {
       const res = await axios.get(API_URL);
       setRecords(res.data);
-    } catch (err) {
+    } catch {
       toast.error("Error fetching attendance records.");
     }
   };
@@ -44,15 +49,20 @@ const Attendance = () => {
     try {
       const res = await axios.get("http://localhost:5000/api/employees");
       setEmployees(res.data);
-    } catch (err) {
+    } catch {
       toast.error("Error fetching employees.");
     }
   };
 
-  const handleClickOutside = (event) => {
-    if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-      setDropdownOpen(null);
-    }
+  const handleClickOutside = (e) => {
+    Object.keys(dropdownRefs.current).forEach((key) => {
+      if (
+        dropdownRefs.current[key] &&
+        !dropdownRefs.current[key].contains(e.target)
+      ) {
+        setDropdownOpen(null);
+      }
+    });
   };
 
   const handleInputChange = (e) => {
@@ -71,7 +81,6 @@ const Attendance = () => {
 
   const handleSubmit = async () => {
     if (!validateForm()) return;
-
     try {
       if (editId) {
         await axios.put(`${API_URL}/${editId}`, formData);
@@ -84,19 +93,19 @@ const Attendance = () => {
       setFormData(initialForm);
       setShowForm(false);
       setEditId(null);
-    } catch (err) {
+    } catch {
       toast.error("Error submitting attendance.");
     }
   };
 
-  const handleEdit = (record) => {
+  const handleEdit = (rec) => {
     setFormData({
-      employee: record.employee._id,
-      date: record.date.split("T")[0],
-      task: record.task,
-      status: record.status,
+      employee: rec.employee._id,
+      date: rec.date.split("T")[0],
+      task: rec.task,
+      status: rec.status,
     });
-    setEditId(record._id);
+    setEditId(rec._id);
     setShowForm(true);
     setDropdownOpen(null);
   };
@@ -106,7 +115,7 @@ const Attendance = () => {
       await axios.delete(`${API_URL}/${id}`);
       fetchAttendance();
       toast.success("Attendance deleted successfully.");
-    } catch (err) {
+    } catch {
       toast.error("Error deleting attendance.");
     }
     setDropdownOpen(null);
@@ -117,7 +126,7 @@ const Attendance = () => {
       await axios.put(`${API_URL}/${id}`, { status: newStatus });
       fetchAttendance();
       toast.success("Status updated.");
-    } catch (err) {
+    } catch {
       toast.error("Error updating status.");
     }
   };
@@ -146,7 +155,7 @@ const Attendance = () => {
             </option>
           ))}
         </select>
-        <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+        <div className="attendance-header-actions">
           <input
             type="text"
             placeholder="Search by employee name"
@@ -196,9 +205,17 @@ const Attendance = () => {
                   ))}
                 </select>
               </td>
-              <td className="action-cell" ref={dropdownRef}>
-                <button onClick={() => setDropdownOpen(dropdownOpen === rec._id ? null : rec._id)}>
-                  More
+              <td
+                className="action-cell"
+                ref={(el) => (dropdownRefs.current[rec._id] = el)}
+              >
+                <button
+                  className="icon-button"
+                  onClick={() =>
+                    setDropdownOpen(dropdownOpen === rec._id ? null : rec._id)
+                  }
+                >
+                  <FiMoreVertical size={20} />
                 </button>
                 {dropdownOpen === rec._id && (
                   <div className="dropdown-menu">
